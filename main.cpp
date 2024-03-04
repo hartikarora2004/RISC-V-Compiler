@@ -71,11 +71,52 @@ bitset<32> encode_in_r(vector<string> tokens)
     bitset<33> machine_code ;
     bitset<32> opcode(encodes_map[tokens[0]][0]);
     bitset<32> rd(reg(tokens[1]));
-    shift 
+    rd = rd << 7;
+    bitset<32> funct3(encodes_map[tokens[0]][1]);
+    funct3 = funct3 << 12;
+    bitset<32> rs1(reg(tokens[2])); 
+    rs1 = rs1 << 15;
+    bitset<32> rs2(reg(tokens[3]));
+    rs2 = rs2 << 20;
+    bitset<32> funct7(encodes_map[tokens[0]][2]);
+    funct7 = funct7 << 25;
+    machine_code = (opcode | rd | funct3 | rs1 | rs2 | funct7);
+}
+
+bitset<32> encode_in_i(vector<string> tokens)
+{
+    bitset<32> machine_code ;
+    bitset<32> opcode(encodes_map[tokens[0]][0]);
+    bitset<32> rd(reg(tokens[1]));
+    rd = rd << 7;
+    bitset<32> funct3(encodes_map[tokens[0]][1]);
+    funct3 = funct3 << 12;
+    bitset<32> rs1(reg(tokens[2])); 
+    rs1 = rs1 << 15;
+    bitset<32> imm(string_to_int(tokens[3]));
+    imm = imm << 20;
+    machine_code = (opcode | rd | funct3 | rs1 | imm);
+}
+bitset<32> encode_in_s(vector<string> tokens)
+{
+    bitset<32> machine_code ;
+    bitset<32> opcode(encodes_map[tokens[0]][0]);
+    bitset<32> rs2(reg(tokens[1]));
+    rs2 = rs2 << 20;
+    bitset<32> funct3(encodes_map[tokens[0]][1]);
+    funct3 = funct3 << 12;
+    int index = tokens[2].find('(');
+    string imm = tokens[2].substr(0, index);
+    bitset<32> imm(string_to_int(imm));
+    bitset<32> rs1(reg(tokens[2].substr(index+1, tokens[2].size()-index-2)));
+    rs1 = rs1 << 15;
+    bitset<32> last_5_bits = imm & 0x1F;
+    last_5_bits = last_5_bits << 7;
+    imm = imm << 20;
+    bitset<32> first_7_bits = imm & 0xFE000000;
 
 
 }
-
 int main()
     {   
         
