@@ -120,6 +120,53 @@ bitset<32> encode_in_s(vector<string> tokens) {
     return machine_code; // Added return statement
 }
 
+map<string, int> labels;
+int pc1 = 0x0;
+void processLabels(const string& line) {
+    if (line.find(':') != string::npos) {
+        string label = line.substr(0, line.find(':'));
+        labels[label] = pc1;
+    } else {
+        pc1 += 4;
+    }
+}
+void loadLabels(const string& filename) {
+    ifstream file(filename);
+    string line;
+    while (getline(file, line)) {
+        processLabels(line);
+    }
+}
+
+bitset<32> encode_in_sb(vector<string> tokens, int pc)
+{
+    loadLabels("assemblycode.asm");
+    bitset<32> machine_code ;
+    for (auto token : tokens) {
+        cout << token << " ";
+    }
+    cout << endl;
+    bitset<32> opcode(encodes_map[tokens[0]][0]);
+    bitset<32> rs1(reg(tokens[1]));
+    rs1 = rs1 << 15;
+    bitset<32> rs2(reg(tokens[2]));
+    rs2 = rs2 << 20;
+    bitset<32> func3(encodes_map[tokens[0]][1]);
+    func3 = func3 << 12;
+    int label = labels[tokens[3]] - pc;
+    int imm = label;
+    bitset<32> imm_bits(imm & 0x1FFE);
+    bitset<32> imm_11(imm >> 11 & 0x1);
+    bitset<32> imm_12(imm >> 12 & 0x1);
+    bitset<32> imm_10to5(imm >> 5 & 0x3F);
+    bitset<32> imm_4to1(imm >> 1 & 0xF);
+
+    bitset<32> imm_final = (imm_12 << 31) | (imm_10to5 <<25) | (imm_4to1 << 8) | (imm_11 <<7);
+    
+    machine_code = opcode | (imm_final << 20) | rs2 | rs1 | func3;
+    return machine_code;
+}
+
 int main() {   
     map <string,int> labels;
     ifstream file("assemblycode.asm");
@@ -155,23 +202,24 @@ int main() {
             
             switch(format) {
                 case 'R': 
-                    mc << pc << " " << encode_in_r(tokens) << endl;
+                       mc << pc," ",encode_in_r(tokens) << endl;
                     break;
                 case 'I':
-                    mc << pc << " " << encode_in_i(tokens) << endl;
-                    break;
+                        mc << pc," ",encode_in_i(tokens) << endl;
+                        break;
                 case 'S':
-                    mc << pc << " " << encode_in_s(tokens) << endl;
-                    break;
-                 case 'B':
-                    mc << pc," ",encode_in_sb(tokens)<< endl;
-                    break;
-                 case 'U':
-                     mc << pc," ",encode_in_u(tokens)<< endl;
-                    break;
-                 case 'J':
-                    mc << pc," ",encode_in_uj(tokens)<< endl;
-                    break;
+                        mc << pc," ",encode_in_s(tokens) << endl;
+                        break;
+                case 'B':
+                        mc << pc," ",encode_in_sb(tokens)<< endl;
+                        break;
+                case 'U':
+                        mc << pc," ",encode_in_u(tokens)<< endl;
+                        break;
+                case 'J':
+                        mc << pc," ",encode_in_uj(tokens)<< endl;
+                        break;
+                
             }
             pc += 4 ;
         }
