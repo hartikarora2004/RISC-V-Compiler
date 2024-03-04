@@ -30,6 +30,30 @@ int string_to_int(string s) {
     return x * sign; 
 }
 
+int bin_to_dec(bitset<32> bin) {
+    int dec = 0;
+    for (int i = 0; i < 32; i++) {
+        dec = dec * 2 + bin[i];
+    }
+    return dec;
+}
+
+string dec_to_hex(int dec) {
+    string hex = "";
+    while (dec != 0) {
+        int temp = 0;
+        temp = dec % 16;
+        if (temp < 10) {
+            hex.push_back(temp + 48);
+        } else {
+            hex.push_back(temp + 55);
+        }
+        dec = dec / 16;
+    }
+    reverse(hex.begin(), hex.end());
+    return hex;
+}
+
 std::map<string,vector<std::string>> encodes_map = {
     {"add", {"0110011", "000", "0000000", "R"}},   // add
     {"and", {"0110011", "111", "0000000", "R"}},   // and
@@ -167,8 +191,37 @@ bitset<32> encode_in_sb(vector<string> tokens, int pc)
     return machine_code;
 }
 
+bitset<32> encode_in_u(vector<string> tokens) {
+    bitset<32> machine_code ;
+    bitset<32> opcode(encodes_map[tokens[0]][0]);
+    bitset<32> rd(reg(tokens[1]));
+    rd = rd << 7;
+    bitset<32> imm(string_to_int(tokens[2]));
+    imm = imm << 12;
+    machine_code = (opcode | rd | imm);
+    return machine_code; // Added return statement
+}
+
+    
+bitset<32> encode_in_uj(vector<string> tokens, int pc) 
+{
+   bitset<32> machine_code ;
+    loadLabels("assemblycode.asm");
+    bitset<32> opcode(encodes_map[tokens[0]][0]);
+    bitset<32> rd(reg(tokens[1]));
+    rd = rd << 7;
+    int imm = labels[tokens[1]] - pc;
+    bitset<32> imm_20(imm >> 20 & 0x1);
+    bitset<32> imm_10to1(imm >> 1 & 0x3FF);
+    bitset<32> imm_11(imm >> 11 & 0x1);
+    bitset<32> imm_19to12(imm >> 12 & 0xFF);
+    bitset<32> imm_final = (imm_20 << 31) | (imm_19to12 << 12) | (imm_10to1 << 21) | (imm_11 << 20);
+    machine_code = opcode | (imm_final << 12) | rd;
+    return machine_code;
+}
+
 int main() {   
-    map <string,int> labels;
+    // map <string,int> labels;
     ifstream file("assemblycode.asm");
     printf("The contents of the file are: \n");
     int pc = 0x0 ;
@@ -202,24 +255,23 @@ int main() {
             
             switch(format) {
                 case 'R': 
-                       mc << pc," ",encode_in_r(tokens) << endl;
+                    mc << pc << " " << encode_in_r(tokens) << endl;
                     break;
                 case 'I':
-                        mc << pc," ",encode_in_i(tokens) << endl;
-                        break;
+                    mc << pc << " " << encode_in_i(tokens) << endl;
+                    break;
                 case 'S':
-                        mc << pc," ",encode_in_s(tokens) << endl;
-                        break;
+                    mc << pc << " " << encode_in_s(tokens) << endl;
+                    break;
                 case 'B':
-                        mc << pc," ",encode_in_sb(tokens)<< endl;
-                        break;
+                    mc << pc << " " << encode_in_sb(tokens, pc) << endl;
+                    break;
                 case 'U':
-                        mc << pc," ",encode_in_u(tokens)<< endl;
-                        break;
+                    mc << pc << " " << encode_in_u(tokens) << endl;
+                    break;
                 case 'J':
-                        mc << pc," ",encode_in_uj(tokens)<< endl;
-                        break;
-                
+                    mc << pc << " " << encode_in_uj(tokens, pc) << endl;
+                    break;
             }
             pc += 4 ;
         }
