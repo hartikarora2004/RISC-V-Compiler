@@ -7,52 +7,78 @@ using namespace std;
 // SB format - beq, bne, bge, blt
 // U format - auipc, lui
 // UJ format - jal
-std::vector<std::string> splitString(const std::string& input, char delimiter) {
-    std::vector<std::string> tokens;
-    std::istringstream iss(input);
-    std::string token;
 
-    while (std::getline(iss, token, delimiter)) {
+vector<string> splitString(const string& input, char delimiter) {
+    vector<std::string> tokens;
+    istringstream iss(input);
+    string token;
+
+    while (getline(iss, token, delimiter)) {
         tokens.push_back(token);
     }
 
     return tokens;
 }
+int string_to_int(string s)
+{
+    string s;
+    int x = 0;
+    for(int i = 0; i < s.size(); i++)
+    {
+        x = x*10 + (s[i] - '0');
+    }
+    return x;
+}
+std::map<string,vector<std::string>> encodes_map = {
+         {"add", {"0110011", "000", "0000000", 'R'}},   // add
+        {"and", {"0110011", "111", "0000000", 'R'}},   // and
+        {"or",  {"0110011", "110", "0000000", 'R'}},   // or
+        {"sll", {"0110011", "001", "0000000", 'R'}},   // sll
+        {"slt", {"0110011", "010", "0000000", 'R'}},   // slt
+        {"sra", {"0110011", "101", "0100000", 'R'}},   // sra
+        {"srl", {"0110011", "101", "0000000", 'R'}},   // srl
+        {"sub", {"0110011", "000", "0100000", 'R'}},   // sub
+        {"xor", {"0110011", "100", "0000000", 'R'}},   // xor
+        {"mul", {"0110011", "000", "0000001", 'R'}},   // mul
+        {"div", {"0110011", "100", "0000001", 'R'}},   // div
+        {"rem", {"0110011", "110", "0000001", 'R'}},   // rem
+        {"addi", {"0010011", "000", "", 'I'}},        // addi
+        {"andi", {"0010011", "111", "", 'I'}},        // andi
+        {"ori",  {"0010011", "110", "", 'I'}},        // ori
+        {"lb",   {"0000011", "000", "", 'I'}},        // lb
+        {"ld",   {"0000011", "011", "", 'I'}},        // ld
+        {"lh",   {"0000011", "001", "", 'I'}},        // lh
+        {"lw",   {"0000011", "010", "", 'I'}},        // lw
+        {"jalr", {"1100111", "000", "", 'I'}},       // jalr
+        {"sb",   {"0100011", "000", "", 'S'}},       // sb
+        {"sw",   {"0100011", "010", "", 'S'}},       // sw
+        {"sd",   {"0100011", "011", "", 'S'}},       // sd
+        {"sh",   {"0100011", "001", "", 'S'}},       // sh
+        {"beq",  {"1100011", "000", "", 'B'}},      // beq
+        {"bne",  {"1100011", "001", "", 'B'}},      // bne
+        {"bge",  {"1100011", "101", "", 'B'}},      // bge
+        {"blt",  {"1100011", "100", "", 'B'}},      // blt
+        {"auipc", {"0010111", "000", "", 'U'}},     // auipc
+        {"lui",   {"0110111", "000", "", 'U'}},     // lui
+        {"jal",   {"1101111", "000", "", 'J'}}     // jal
+    };
+int reg(string register_name)
+{
+    return string_to_int(register_name.substr(1));
+}
+bitset<32> encode_in_r(vector<string> tokens)
+{
+    bitset<33> machine_code ;
+    bitset<32> opcode(encodes_map[tokens[0]][0]);
+    bitset<32> rd(reg(tokens[1]));
+    shift 
+
+
+}
+
 int main()
     {   
-        std::map<string,vector<std::string>> encodes_map = {
-        {"add", {"0000011", "000", 'R'}},
-        {"and", {"0000011", "111", 'R'}},
-        {"or", {"0000011", "110", 'R'}},
-        {"sll", {"0000011", "001", 'R'}},
-        {"slt", {"0000011", "010", 'R'}},
-        {"sra", {"0000011", "101", 'R'}},
-        {"srl", {"0000011", "101", 'R'}},
-        {"sub", {"0100011", "000", 'R'}},
-        {"xor", {"0000011", "100", 'R'}},
-        {"mul", {"0000011", "000", 'R'}},
-        {"div", {"0000011", "100", 'R'}},
-        {"rem", {"0000011", "110", 'R'}},
-        {"addi", {"0010011", "000", 'I'}},
-        {"andi", {"0010011", "111", 'I'}},
-        {"ori", {"0010011", "110", 'I'}},
-        {"lb", {"0000011", "000", 'I'}},
-        {"ld", {"0000011", "011", 'I'}},
-        {"lh", {"0000011", "001", 'I'}},
-        {"lw", {"0000011", "010", 'I'}},
-        {"jalr", {"1100111", "000", 'I'}},
-        {"sb", {"0100011", "000", 'S'}},
-        {"sw", {"0100011", "010", 'S'}},
-        {"sd", {"0100011", "011", 'S'}},
-        {"sh", {"0100011", "001", 'S'}},
-        {"beq", {"1100011", "000", 'B'}},
-        {"bne", {"1100011", "001", 'B'}},
-        {"bge", {"1100011", "101", 'B'}},
-        {"blt", {"1100011", "100", 'B'}},
-        {"auipc", {"0010111", "000", 'U'}},
-        {"lui", {"0110111", "000", 'U'}},
-        {"jal", {"1101111", "000", 'J'}}
-    };
+        
         map <string,int> labels;
         ifstream file("assemblycode.asm");
         printf("The contents of the file are: \n");
