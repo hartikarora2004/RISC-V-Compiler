@@ -19,15 +19,20 @@ vector<string> splitString(const string& input, char delimiter) {
 
     return tokens;
 }
-int string_to_int(string s)
-{
-    string s;
+int string_to_int(string s) {
     int x = 0;
-    for(int i = 0; i < s.size(); i++)
-    {
-        x = x*10 + (s[i] - '0');
+    int sign = 1;
+
+    if (s[0] == '-') {
+        sign = -1;
+        s = s.substr(1); 
     }
-    return x;
+
+    for(int i = 0; i < s.size(); i++) {
+        x = x * 10 + (s[i] - '0');
+    }
+
+    return x * sign; 
 }
 std::map<string,vector<std::string>> encodes_map = {
          {"add", {"0110011", "000", "0000000", 'R'}},   // add
