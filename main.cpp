@@ -3,14 +3,12 @@
 using namespace std;
 
 vector<string> splitString(const string& input, char delimiter) {
-    vector<std::string> tokens;
+    vector<string> tokens;
     istringstream iss(input);
     string token;
-
     while (getline(iss, token, delimiter)) {
         tokens.push_back(token);
     }
-
     return tokens;
 }
 
@@ -50,6 +48,7 @@ string dec_to_hex(int dec) {
         }
         dec = dec / 16;
     }
+    hex = hex + "x0" ;
     reverse(hex.begin(), hex.end());
     return hex;
 }
