@@ -207,11 +207,11 @@ void loadLabels(const string& filename) {
     while (getline(file, line)) {
         processLabels(line);
     }
+    file.clode();
 }
 
 bitset<32> encode_in_sb(vector<string> tokens, int pc)
 {
-    loadLabels("assemblycode.asm");
     bitset<32> machine_code ;
     for (auto token : tokens) {
         cout << token << " ";
@@ -253,7 +253,7 @@ bitset<32> encode_in_u(vector<string> tokens) {
 bitset<32> encode_in_uj(vector<string> tokens, int pc) 
 {
    bitset<32> machine_code ;
-    loadLabels("assemblycode.asm");
+    
     bitset<32> opcode(encodes_map[tokens[0]][0]);
     bitset<32> rd(reg(tokens[1]));
     rd = rd << 7;
@@ -272,29 +272,13 @@ int main() {
     ifstream file("assemblycode.asm");
     printf("The contents of the file are: \n");
     int pc = 0x0 ;
-    
-    if (file.is_open()) {   
-        while (!file.eof()) {
-            string line;
-            getline(file, line);
-            
-            if (line.find(':') != string::npos) {
-                string label = line.substr(0, line.find(':'));
-                labels[label] = pc;
-            } else {
-                pc += 4 ;
-            }
-        }
-    }
-    
-    file.close();
+    loadLabels("assemblycode.asm");
     ofstream mc("machinecode.mc");
     pc = 0x0;
-    
+    file.open();
     while (!file.eof()) {
         string line;
         getline(file, line);
-        
         if (line.find(':') == string::npos) {   
             vector<string> tokens = splitString(line, ' ');
             string instruction = tokens[0];
