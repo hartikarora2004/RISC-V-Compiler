@@ -9,16 +9,16 @@ SB format - beq, bne, bge, blt <br>
 U format - auipc, lui <br>
 UJ format - jal <br>
 # Built With / Concept Used
-C++ 
-RISC-V (32 bit architecture)
+C++ <br>
+RISC-V (32 bit architecture) <br>
 
 # How To Run Code
- Type following
--> Place the code to translate in assemblycode.asm File
--> Compile main.cpp
--> Output will be produced in machinecode.mc File
--> machinecode.mc has Machine Code in Hexadecimal Form with Program Counter followed by Data Memory Part.
+ Type following <br>
+-> Place the code to translate in assemblycode.asm File <br>
+-> Compile main.cpp <br>
+-> Output will be produced in machinecode.mc File <br>
+-> machinecode.mc has Machine Code in Hexadecimal Form with Program Counter followed by Data Memory Part. <br>
 
 # Built By
--> Hartik Arora
--> Sneha Sahu
+-> Hartik Arora <br>
+-> Sneha Sahu <br>
