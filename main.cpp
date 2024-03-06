@@ -87,10 +87,58 @@ std::map<string,vector<std::string>> encodes_map = {
     {"jal",   {"1101111", "000", "", "J"}}     // jal
 };
 
-int reg(string register_name) {
-    return string_to_int(register_name.substr(1));
+int reg(string register_name)
+{  
+   char first_char = register_name[0];
+   if(first_char == 'x')
+    { 
+        return string_to_int(register_name.substr(1)); 
+    }
+    else if(first_char == 'z')
+    {
+        return 0;
+    }
+    else if(first_char == 'r')
+    {
+        return 1 ;
+    }
+    else if(register_name == "sp")
+    {
+        return 2;
+    }
+    else if (register_name == "s0" or register_name == "fp")
+    {
+        return 8;
+    }
+    else  if (first_char == 's')
+    {
+        return 16 + string_to_int(register_name.substr(1));
+    }
+    else if(first_char == 'g')
+    {
+        return 3;
+    }
+    else if(register_name == "tp")
+    {
+        return 4;
+    }
+    else if(first_char == 't')
+    {   int a = string_to_int(register_name.substr(1));
+        if(a < 3)
+        {
+            return string_to_int(register_name.substr(1)) + 5;
+        }
+        else
+        {
+            return string_to_int(register_name.substr(1)) + 25;
+        }  
+    }
+    else
+    {
+        return 10 + string_to_int(register_name.substr(1));
+    }
+    
 }
-
 bitset<32> encode_in_r(vector<string> tokens) {
     bitset<32> machine_code ;
     bitset<32> opcode(encodes_map[tokens[0]][0]);
