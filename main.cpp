@@ -1,6 +1,30 @@
-#include<bits/stdc++.h>
+#include<iostream>
+#include <string>
+#include <vector>
+#include <map>
+#include <bitset>
+#include <cmath>
+#include <algorithm>
+#include <sstream>
+#include <iomanip>
 #include <fstream>
 using namespace std;
+
+struct datafile
+{
+    string name;
+    string type;
+    vector <long long> value;
+    string value1;
+};
+struct seg
+{
+    string name;
+    long long position;
+};
+
+
+
 
 vector<string> splitString(const string& input) {
     vector<string> tokens;
@@ -55,7 +79,7 @@ long long int bin_to_dec(bitset<32> bin) {
     return dec;
 }
 
-string dec_to_hex(long long int dec) {
+string dec_to_hex_1(long long int dec) {
     string hex = "";
     while (dec != 0) {
         int temp = 0;
@@ -71,6 +95,27 @@ string dec_to_hex(long long int dec) {
     reverse(hex.begin(), hex.end());
     return hex;
 }
+string dec_to_hex(long long int dec) {
+    string hex = "";
+    while (dec != 0) {
+        int temp = dec % 16;
+        if (temp < 10) {
+            hex.push_back(temp + 48);
+        } else {
+            hex.push_back(temp + 55);
+        }
+        dec = dec / 16;
+    }
+    while (hex.size() < 8) 
+    { 
+        hex = hex + "0";
+    }
+    hex = hex + "x0";
+    
+    reverse(hex.begin(), hex.end());
+    return hex;
+}
+
 
 std::map<string,vector<std::string>> encodes_map = {
     {"add", {"0110011", "000", "0000000", "R"}},   // add
@@ -284,6 +329,209 @@ string encode_in_uj(vector<string> tokens, int pc)
     return dec_to_hex(bin_to_dec(machine_code)) ;
 }
 
+string inc_hex(string address, int bytes) {
+    unsigned long long int_value;
+    stringstream ss;
+    ss << hex << address;
+    ss >> int_value;
+    int_value += bytes;
+    stringstream result;
+    result << hex << int_value;
+    return result.str();
+}
+
+typedef pair<string,string> MemoryPair;
+MemoryPair datamemory; // pair of data memory with its size in bytes
+vector<MemoryPair> datamemoryList; // vector of data memory pairs with their addresses and values
+vector<seg> datalabels; // vector of data labels with its position in memory
+const int START =0;
+void read_data() {
+    ifstream file("assemblycode.asm");
+    string line;
+    vector<datafile> stored;
+    int start = 0;
+
+    if (file.is_open()) {
+        while (getline(file, line)) {
+            vector<string> tokens = splitString(line);
+
+            if (start > 1) 
+            {
+                continue;
+            }
+            else if (start == 1) 
+            {
+                if (tokens[0] == ".text:") 
+                { // Data part ends
+                    start = 2;
+                }
+                else 
+                {
+                    datafile temp;
+                    int flag = 0;
+                    int index = -1;
+
+                    for (int i = 0; i < tokens.size(); i++) 
+                    {
+                        cout << tokens[i] << " ";
+                        if (tokens[i].find(":") != string::npos && tokens[i+1].find(".") != string::npos)
+                        {
+                            flag = 1;
+                            index = i;
+                            break;
+                        }
+                    }
+
+                    if (flag == 1) 
+                    {
+                        string nameT = tokens[index].substr(0, tokens[index].size() - 1);
+                        string typeT = tokens[index + 1].substr(1);
+                        temp.name = nameT;
+                        temp.type = typeT;
+                        if (typeT == "asciiz") 
+                        {
+                            for (int i = index + 2; i < tokens.size(); i++) 
+                            {
+                                string a = tokens[i];
+                                for (int j = 1; j < a.size()-1; j++) 
+                                {
+                                    temp.value1.push_back(a[j]);
+                                }
+                                // temp.value1.push_back(0);
+                            }
+                        } 
+                        else 
+                        {
+                            for (int i = index + 2; i < tokens.size(); i++) 
+                            {
+                                int a = string_to_int(tokens[i]);
+                                temp.value.push_back(a);
+                            }
+                        }
+                    } 
+                    // else 
+                    // {
+                    //     temp.name = tokens[0];
+                    //     temp.type = tokens[1].substr(1);
+                        
+                    //     for (int i = 2; i < tokens.size(); i++) 
+                    //     {
+                    //         int a = string_to_int(tokens[i]);
+                    //         temp.value.push_back(a);
+                    //     }
+                    // }
+                    stored.push_back(temp);
+                }
+            } 
+            else if (start == 0) 
+            {
+                if (tokens[0] == ".data:") 
+                { // Data part starts
+                    start = 1;
+                }
+            }
+        }
+    }
+
+    file.close();
+
+    int pos = 0;
+    string address = "0x10000000";
+    int update = string_to_int(address);
+
+    for (int i = 0; i < stored.size(); i++) {
+
+        if (stored[i].type == "byte") 
+        {
+            for (int j = 0; j < stored[i].value.size(); j++) 
+            {
+                MemoryPair data;
+                data.first = address;
+                int val = stored[i].value[j];
+                string hex = dec_to_hex(val);
+                data.second = hex;
+                datamemoryList.push_back(data);
+                pos++;
+                update += 1;
+                address = dec_to_hex(update);
+            }
+        } 
+        else if (stored[i].type == "word") 
+        {
+            for (int j = 0; j < stored[i].value.size(); j++) 
+            {
+                MemoryPair data;
+                data.first = address;
+                int val = stored[i].value[j];
+                string hex = dec_to_hex(val);
+                data.second = hex;
+                datamemoryList.push_back(data);
+                pos += 4;
+                update += 4;
+                address = dec_to_hex(update);
+            }
+        } 
+        else if (stored[i].type == "half") 
+        {
+            for (int j = 0; j < stored[i].value.size(); j++) 
+            {
+                MemoryPair data;
+                data.first = address;
+                data.second.push_back(stored[i].value[j]);
+                datamemoryList.push_back(data);
+                pos += 2;
+                update += 2;
+                address = dec_to_hex(update);
+                
+            }
+        }
+        else if (stored[i].type == "double")
+        {
+            for (int j = 0; j < stored[i].value.size(); j++) 
+            {
+                MemoryPair data;
+                data.first = address;
+                data.second.push_back(stored[i].value[j]);
+                datamemoryList.push_back(data);
+                pos += 8;
+                update += 8;
+                address = dec_to_hex(update);
+            }
+        }
+        else if (stored[i].type == "asciiz")
+        {
+            for (int j = 0; j < stored[i].value1.size(); j++) 
+            {
+                MemoryPair data;
+                data.first = address;
+                data.second.push_back(stored[i].value1[j]);
+                datamemoryList.push_back(data);
+                pos++;
+                update += 1;
+                address = dec_to_hex(update);
+            }
+        
+        }
+    }
+    cout << endl;
+     
+
+    ofstream mc("machinecode.mc", ios::app);
+    if (mc.is_open())
+    {
+        for (const auto &memory : datamemoryList) 
+        {  
+        mc << memory.first << " " ;
+            for (auto value : memory.second)  
+            {
+                mc << value ;
+            }
+        mc << endl;
+        }
+    }
+}
+
+
 int main() {   
     // map <string,int> labels;
     ifstream file("assemblycode.asm");
@@ -299,19 +547,19 @@ int main() {
             char format = encodes_map[instruction][3][0];
             switch(format) {
                 case 'R':    
-                    mc << dec_to_hex(pc) << " " <<  encode_in_r(tokens) << endl;
+                    mc << dec_to_hex_1(pc) << " " <<  encode_in_r(tokens) << endl;
                     break;
                 case 'I':
-                    mc << dec_to_hex(pc) << " "  << encode_in_i(tokens) << endl;
+                    mc << dec_to_hex_1(pc) << " "  << encode_in_i(tokens) << endl;
                     break;
                 case 'S':
-                    mc << dec_to_hex(pc) << " " << encode_in_s(tokens) << endl;
+                    mc << dec_to_hex_1(pc) << " " << encode_in_s(tokens) << endl;
                     break;
                 case 'B':
-                    mc << dec_to_hex(pc) << " " << encode_in_sb(tokens,pc) << endl;
+                    mc << dec_to_hex_1(pc) << " " << encode_in_sb(tokens,pc) << endl;
                     break;
                 case 'U':
-                    mc << dec_to_hex(pc) << " "  << encode_in_u(tokens) << endl;
+                    mc << dec_to_hex_1(pc) << " "  << encode_in_u(tokens) << endl;
                     break;
                 case 'J':
                     mc << dec_to_hex(pc) << " "  << encode_in_uj(tokens,pc) << endl;
@@ -320,6 +568,10 @@ int main() {
             pc += 4 ;
         }
     }
+    
+    mc << "--------------------------------------------------------"<< endl;
+    
+    read_data();
     mc.close();
     return 0;
 }
