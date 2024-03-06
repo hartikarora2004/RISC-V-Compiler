@@ -2,17 +2,36 @@
 #include <fstream>
 using namespace std;
 
-vector<string> splitString(const string& input, char delimiter) {
+vector<string> splitString(const string& input) {
     vector<string> tokens;
-    istringstream iss(input);
-    string token;
-    while (getline(iss, token, delimiter)) {
+    string token = "" ;
+    for(auto id : input) 
+    {   
+        if(id == ' ' or id == ',' or id == '\t') 
+        {
+            if(token != "") 
+            {
+                
+                tokens.push_back(token);
+                
+            }
+            token = "" ;
+        }
+        else
+        { 
+          token += id ;
+        }
+    }
+    if (token != "") {
         tokens.push_back(token);
     }
     return tokens;
-}
+    }
 
 int string_to_int(string s) {
+    if (s.size() >= 2 && s[0] == '0' && s[1] == 'x') {
+        return stoi(s, nullptr, 16);
+    }
     int x = 0;
     int sign = 1;
 
@@ -28,15 +47,15 @@ int string_to_int(string s) {
     return x * sign; 
 }
 
-int bin_to_dec(bitset<32> bin) {
-    int dec = 0;
+long long int bin_to_dec(bitset<32> bin) {
+    long long int dec = 0;
     for (int i = 0; i < 32; i++) {
         dec += bin[i] * pow(2, i);
     }
     return dec;
 }
 
-string dec_to_hex(int dec) {
+string dec_to_hex(long long int dec) {
     string hex = "";
     while (dec != 0) {
         int temp = 0;
@@ -139,7 +158,7 @@ int reg(string register_name)
     }
     
 }
-bitset<32> encode_in_r(vector<string> tokens) {
+string encode_in_r(vector<string> tokens) {
     bitset<32> machine_code ;
     bitset<32> opcode(encodes_map[tokens[0]][0]);
     bitset<32> rd(reg(tokens[1]));
@@ -153,10 +172,10 @@ bitset<32> encode_in_r(vector<string> tokens) {
     bitset<32> funct7(encodes_map[tokens[0]][2]);
     funct7 = funct7 << 25;
     machine_code = (opcode | rd | funct3 | rs1 | rs2 | funct7);
-    return machine_code; // Added return statement
+    return dec_to_hex(bin_to_dec(machine_code)) ; // Added return statement
 }
 
-bitset<32> encode_in_i(vector<string> tokens) {
+string encode_in_i(vector<string> tokens) {
     bitset<32> machine_code ;
     bitset<32> opcode(encodes_map[tokens[0]][0]);
     bitset<32> rd(reg(tokens[1]));
@@ -167,11 +186,12 @@ bitset<32> encode_in_i(vector<string> tokens) {
     rs1 = rs1 << 15;
     bitset<32> imm(string_to_int(tokens[3]));
     imm = imm << 20;
+    
     machine_code = (opcode | rd | funct3 | rs1 | imm);
-    return machine_code; // Added return statement
+    return dec_to_hex(bin_to_dec(machine_code)) ; // Added return statement
 }
 
-bitset<32> encode_in_s(vector<string> tokens) {
+string encode_in_s(vector<string> tokens) {
     bitset<32> machine_code ;
     bitset<32> opcode(encodes_map[tokens[0]][0]);
     bitset<32> rs2(reg(tokens[1]));
@@ -188,7 +208,7 @@ bitset<32> encode_in_s(vector<string> tokens) {
     imm = imm << 20;
     bitset<32> first_7_bits = imm &  bitset<32>(0xFE000000);
     machine_code = (opcode | rs2 | funct3 | rs1 | last_5_bits | first_7_bits);
-    return machine_code; // Added return statement
+    return dec_to_hex(bin_to_dec(machine_code)) ; // Added return statement
 }
 
 map<string, int> labels;
@@ -210,7 +230,7 @@ void loadLabels(const string& filename) {
     file.close();
 }
 
-bitset<32> encode_in_sb(vector<string> tokens, int pc)
+string encode_in_sb(vector<string> tokens, int pc)
 {
     bitset<32> machine_code ;
     bitset<32> opcode(encodes_map[tokens[0]][0]);
@@ -220,8 +240,9 @@ bitset<32> encode_in_sb(vector<string> tokens, int pc)
     rs2 = rs2 << 20;
     bitset<32> func3(encodes_map[tokens[0]][1]);
     func3 = func3 << 12;
-    int label = labels[tokens[3]] - pc;
-    int imm = label;
+    int imm  = labels[tokens[3]] - pc;
+    cout << labels[tokens[3]] << endl ;
+    cout << imm <<endl;;
     bitset<32> imm_11(imm & 0x400);
     bitset<32> imm_12(imm & 0x800);
     bitset<32> imm_10to5(imm & 0x7E0);
@@ -230,10 +251,11 @@ bitset<32> encode_in_sb(vector<string> tokens, int pc)
     bitset<32> imm_final = (imm_12 << 19) | (imm_10to5 <<20) | (imm_4to1 << 7) | (imm_11 >> 4);
 
     machine_code = opcode | rs1 | rs2 | func3 | imm_final;
-    return machine_code;
+    cout << machine_code << endl;
+    return dec_to_hex(bin_to_dec(machine_code)) ;
 }
 
-bitset<32> encode_in_u(vector<string> tokens) {
+string encode_in_u(vector<string> tokens) {
     bitset<32> machine_code ;
     bitset<32> opcode(encodes_map[tokens[0]][0]);
     bitset<32> rd(reg(tokens[1]));
@@ -241,11 +263,12 @@ bitset<32> encode_in_u(vector<string> tokens) {
     bitset<32> imm(string_to_int(tokens[2]));
     imm = imm << 12;
     machine_code = (opcode | rd | imm);
-    return machine_code; // Added return statement
+    return dec_to_hex(bin_to_dec(machine_code)) ; // Added return statement
+
 }
 
     
-bitset<32> encode_in_uj(vector<string> tokens, int pc) 
+string encode_in_uj(vector<string> tokens, int pc) 
 {
     bitset<32> machine_code ;
     bitset<32> opcode(encodes_map[tokens[0]][0]);
@@ -257,10 +280,8 @@ bitset<32> encode_in_uj(vector<string> tokens, int pc)
     bitset<32> bit_11(imm >> 2 & 0x100);
     bitset<32> bit_19to12(imm >> 12 & 0xFF);
     bitset<32> imm_final = (bit_20 | bit_19to12 | bit_11 | bit_10to1);
-    
     machine_code = opcode | rd | imm_final << 12;
-    return machine_code;
-    
+    return dec_to_hex(bin_to_dec(machine_code)) ;
 }
 
 int main() {   
@@ -268,33 +289,32 @@ int main() {
     ifstream file("assemblycode.asm");
     int pc = 0x0 ;
     loadLabels("assemblycode.asm");
-    ofstream mc("hello.txt");
+    ofstream mc("machinecode.mc");
     while (!file.eof()) {
         string line;
         getline(file, line);
         if (line.find(':') == string::npos) {   
-            vector<string> tokens = splitString(line, ' ');
+            vector<string> tokens = splitString(line);
             string instruction = tokens[0];
             char format = encodes_map[instruction][3][0];
             switch(format) {
-                case 'R': 
-                    mc << dec_to_hex(bin_to_dec(encode_in_r(tokens))) << endl;
+                case 'R':    
+                    mc << dec_to_hex(pc) << " " <<  encode_in_r(tokens) << endl;
                     break;
                 case 'I':
-                    mc <<dec_to_hex(bin_to_dec(encode_in_i(tokens))) << endl;
+                    mc << dec_to_hex(pc) << " "  << encode_in_i(tokens) << endl;
                     break;
                 case 'S':
-                    mc <<dec_to_hex(bin_to_dec(encode_in_s(tokens))) << endl;
+                    mc << dec_to_hex(pc) << " " << encode_in_s(tokens) << endl;
                     break;
                 case 'B':
-                    mc <<dec_to_hex(bin_to_dec(encode_in_sb(tokens,pc))) << endl;
+                    mc << dec_to_hex(pc) << " " << encode_in_sb(tokens,pc) << endl;
                     break;
                 case 'U':
-                    mc <<dec_to_hex(bin_to_dec(encode_in_u(tokens))) << endl;
+                    mc << dec_to_hex(pc) << " "  << encode_in_u(tokens) << endl;
                     break;
                 case 'J':
-                    
-                    mc <<dec_to_hex(bin_to_dec(encode_in_uj(tokens,pc))) << endl;
+                    mc << dec_to_hex(pc) << " "  << encode_in_uj(tokens,pc) << endl;
                     break;
             }
             pc += 4 ;
