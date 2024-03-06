@@ -31,7 +31,7 @@ int string_to_int(string s) {
 int bin_to_dec(bitset<32> bin) {
     int dec = 0;
     for (int i = 0; i < 32; i++) {
-        dec = dec * 2 + bin[i];
+        dec += bin[i] * pow(2, i);
     }
     return dec;
 }
@@ -207,7 +207,7 @@ void loadLabels(const string& filename) {
     while (getline(file, line)) {
         processLabels(line);
     }
-    file.clode();
+    file.close();
 }
 
 bitset<32> encode_in_sb(vector<string> tokens, int pc)
@@ -273,39 +273,38 @@ int main() {
     printf("The contents of the file are: \n");
     int pc = 0x0 ;
     loadLabels("assemblycode.asm");
-    ofstream mc("machinecode.mc");
-    pc = 0x0;
-    file.open();
+    ofstream mc("machinecode.txt");
+    mc << "Sneha" ;
     while (!file.eof()) {
         string line;
         getline(file, line);
         if (line.find(':') == string::npos) {   
             vector<string> tokens = splitString(line, ' ');
             string instruction = tokens[0];
-            char format = encodes_map[instruction][2][0];
-            
+            char format = encodes_map[instruction][3][0];
             switch(format) {
                 case 'R': 
-                    mc << pc << " " << encode_in_r(tokens) << endl;
+                    mc << pc , " " , dec_to_hex(bin_to_dec(encode_in_r(tokens)));
                     break;
                 case 'I':
-                    mc << pc << " " << encode_in_i(tokens) << endl;
+                    mc << pc , " " , dec_to_hex(bin_to_dec(encode_in_i(tokens)));
                     break;
                 case 'S':
-                    mc << pc << " " << encode_in_s(tokens) << endl;
+                    mc << pc , " " , dec_to_hex(bin_to_dec(encode_in_s(tokens)));
                     break;
                 case 'B':
-                    mc << pc << " " << encode_in_sb(tokens, pc) << endl;
+                    mc << pc , " " , dec_to_hex(bin_to_dec(encode_in_sb(tokens,pc)));
                     break;
                 case 'U':
-                    mc << pc << " " << encode_in_u(tokens) << endl;
+                    mc << pc , " " , dec_to_hex(bin_to_dec(encode_in_u(tokens)));
                     break;
                 case 'J':
-                    mc << pc << " " << encode_in_uj(tokens, pc) << endl;
+                    mc << pc , " " , dec_to_hex(bin_to_dec(encode_in_uj(tokens,pc)));
                     break;
             }
             pc += 4 ;
         }
     }
+    mc.close();
     return 0;
 }
