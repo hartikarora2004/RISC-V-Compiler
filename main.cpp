@@ -616,7 +616,11 @@ int main() {
         {
             continue;
         }
-        if (line.find(':') == string::npos) {   
+        if (line.find(':') == string::npos | ( line.find(':') != string::npos & len(splitString(line) > 2))){   
+            if(line.find(':') != string::npos)
+            {
+               line = strip(line.substr(line.find(':') + 1));
+            }
             vector<string> tokens = splitString(line);
             string instruction = tokens[0];
             char format = encodes_map[instruction][3][0];
