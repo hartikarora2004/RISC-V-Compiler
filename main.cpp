@@ -12,7 +12,21 @@
 #include <iomanip>
 #include <fstream>
 using namespace std;
+string lstrip(const string& s) {
+    size_t start = s.find_first_not_of(" \t\n\v\f\r");
+    return (start == string::npos) ? "" : s.substr(start);
+}
 
+// Function to remove trailing whitespace characters
+string rstrip(const string& s) {
+    size_t end = s.find_last_not_of(" \t\n\v\f\r");
+    return (end == string::npos) ? "" : s.substr(0, end + 1);
+}
+
+// Function to remove leading and trailing whitespace characters
+string strip(const string& s) {
+    return rstrip(lstrip(s));
+}
 struct datafile
 {
     string name;
@@ -25,10 +39,6 @@ struct seg
     string name;
     long long position;
 };
-
-
-
-
 vector<string> splitString(const string& input) {
     vector<string> tokens;
     string token = "" ;
@@ -279,7 +289,7 @@ map<string, int> labels;
 int pc1 = 0x0;
 void processLabels(const string& line) {
     if (line.find(':') != string::npos) {
-        string label = line.substr(0, line.find(':'));
+        string label = strip(line.substr(0, line.find(':')));
         labels[label] = pc1;
     } else {
         pc1 += 4;
