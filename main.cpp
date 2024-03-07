@@ -311,7 +311,7 @@ void processLabels(const string& line) {
     if (line.find(':') != string::npos){
         string label = strip(line.substr(0, line.find(':')));
         labels[label] = pc1;
-        if (splitString(line).size() > 2){
+        if (splitString(line).size() > 2 and line.find('.') == string::npos){
             pc1 += 4 ;
         }
     }
