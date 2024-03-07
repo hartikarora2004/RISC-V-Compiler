@@ -308,10 +308,14 @@ string encode_in_lw(vector<string> tokens, int pc )
 map<string, int> labels;
 int pc1 = 0x0;
 void processLabels(const string& line) {
-    if (line.find(':') != string::npos) {
+    if (line.find(':') != string::npos){
         string label = strip(line.substr(0, line.find(':')));
         labels[label] = pc1;
-    } else {
+        if (splitString(line).size() > 2){
+            pc1 += 4 ;
+        }
+    }
+    else {
         pc1 += 4;
     }
 }
