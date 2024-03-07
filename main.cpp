@@ -308,14 +308,14 @@ string encode_in_lw(vector<string> tokens, int pc )
 map<string, int> labels;
 int pc1 = 0x0;
 void processLabels(const string& line) {
-    if (line.find(':') != string::npos){
+    if (line.find(':') != string::npos  and line.find('.') == string::npos){
         string label = strip(line.substr(0, line.find(':')));
         labels[label] = pc1;
-        if (splitString(line).size() > 2 and line.find('.') == string::npos){
+        if (splitString(line).size() > 2){
             pc1 += 4 ;
         }
     }
-    else {
+    else if (line.find('.') == string::npos){
         pc1 += 4;
     }
 }
@@ -373,6 +373,7 @@ string encode_in_uj(vector<string> tokens, int pc)
     bitset<32> rd(reg(tokens[1]));
     rd = rd << 7;
     int imm = labels[tokens[2]] - pc ;
+    
     bitset<32> bit_20(imm >> 1 & 0x80000);
     bitset<32> bit_10to1(imm << 8 & 0x7FE00);
     bitset<32> bit_11(imm >> 2 & 0x100);
@@ -381,7 +382,6 @@ string encode_in_uj(vector<string> tokens, int pc)
     machine_code = opcode | rd | imm_final << 12;
     return dec_to_hex(bin_to_dec(machine_code)) ;
 }
-
 string inc_hex(string address, int bytes) {
     unsigned long long int_value;
     stringstream ss;
@@ -620,10 +620,17 @@ int main() {
         {
             continue;
         }
-        if (line.find(':') == string::npos | ( line.find(':') != string::npos & len(splitString(line) > 2))){   
-            if(line.find(':') != string::npos)
+        if (line.find('.') == string::npos){   
+            if(line.find(':') != string::npos) 
             {
-               line = strip(line.substr(line.find(':') + 1));
+                if(splitString(line).size() > 2)
+                {
+                line = strip(line.substr(line.find(':') + 1));
+                }
+                else
+                {
+                    continue;
+                }
             }
             vector<string> tokens = splitString(line);
             string instruction = tokens[0];
@@ -650,14 +657,15 @@ int main() {
                 case 'L':
                     mc << dec_to_hex_1(pc) << " "  << encode_in_lw(tokens, pc) << endl;
                     break;
+
             }
             pc += 4 ;
         }
     }
-    
     mc << "--------------------------------------------------------"<< endl;
     
     read_data();
     mc.close();
+    
     return 0;
 }
