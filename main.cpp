@@ -12,6 +12,22 @@
 #include <iomanip>
 #include <fstream>
 using namespace std;
+
+struct datafile
+{
+    string name;
+    string type;
+    vector <long long> value;
+    string value1;
+};
+struct seg
+{
+    string name;
+    string position;
+};
+
+
+
 string lstrip(const string& s) {
     size_t start = s.find_first_not_of(" \t\n\v\f\r");
     return (start == string::npos) ? "" : s.substr(start);
@@ -27,18 +43,9 @@ string rstrip(const string& s) {
 string strip(const string& s) {
     return rstrip(lstrip(s));
 }
-struct datafile
-{
-    string name;
-    string type;
-    vector <long long> value;
-    string value1;
-};
-struct seg
-{
-    string name;
-    long long position;
-};
+
+
+
 vector<string> splitString(const string& input) {
     vector<string> tokens;
     string token = "" ;
@@ -233,7 +240,8 @@ string encode_in_r(vector<string> tokens) {
     return dec_to_hex(bin_to_dec(machine_code)) ; // Added return statement
 }
 
-string encode_in_i(vector<string> tokens) {
+string encode_in_i(vector<string> tokens) 
+{
     bitset<32> machine_code ;
     bitset<32> opcode(encodes_map[tokens[0]][0]);
     bitset<32> rd(reg(tokens[1]));
@@ -249,7 +257,8 @@ string encode_in_i(vector<string> tokens) {
     return dec_to_hex(bin_to_dec(machine_code)) ; // Added return statement
 }
 
-string encode_in_s(vector<string> tokens) {
+string encode_in_s(vector<string> tokens) 
+{
     bitset<32> machine_code ;
     bitset<32> opcode(encodes_map[tokens[0]][0]);
     bitset<32> rs2(reg(tokens[1]));
@@ -269,22 +278,33 @@ string encode_in_s(vector<string> tokens) {
     return dec_to_hex(bin_to_dec(machine_code)) ; // Added return statement
 }
 
-string encode_in_lw(vector<string> tokens) {
+string encode_in_lw(vector<string> tokens, int pc ) 
+{
     bitset<32> machine_code ;
     bitset<32> opcode(encodes_map[tokens[0]][0]);
     bitset<32> rd(reg(tokens[1]));
     rd = rd << 7;
     bitset<32> funct3(encodes_map[tokens[0]][1]);
     funct3 = funct3 << 12;
-    int index = tokens[2].find('(');
-    string imm_str = tokens[2].substr(0, index);
-    bitset<32> imm(string_to_int(imm_str));
-    imm = imm << 20;
-    bitset<32> rs1(reg(tokens[2].substr(index + 1, tokens[2].size() - index - 2)));
-    rs1 = rs1 << 15;
-    machine_code = (opcode | rd | funct3 | rs1 | imm);
+    if (tokens[2].find('(') != string::npos) 
+    {
+        int index = tokens[2].find('(');
+        string imm_str = tokens[2].substr(0, index);
+        bitset<32> imm(string_to_int(imm_str));
+        bitset<32> rs1(reg(tokens[2].substr(index + 1, tokens[2].size() - index - 2)));
+        rs1 = rs1 << 15;
+        machine_code = (opcode | rd | funct3 | rs1 | imm);
+    } 
+    else 
+    {
+        bitset<32> imm(string_to_int(tokens[2]));
+        imm = imm << 20;
+        machine_code = (opcode | rd | funct3 | imm);
+    }
     return dec_to_hex(bin_to_dec(machine_code)) ; // Added return statement
 }
+
+
 map<string, int> labels;
 int pc1 = 0x0;
 void processLabels(const string& line) {
@@ -315,8 +335,8 @@ string encode_in_sb(vector<string> tokens, int pc)
     bitset<32> func3(encodes_map[tokens[0]][1]);
     func3 = func3 << 12;
     int imm  = labels[tokens[3]] - pc;
-    cout << labels[tokens[3]] << endl ;
-    cout << imm <<endl;;
+    // cout << labels[tokens[3]] << endl ;
+    // cout << imm <<endl;
     bitset<32> imm_11(imm & 0x400);
     bitset<32> imm_12(imm & 0x800);
     bitset<32> imm_10to5(imm & 0x7E0);
@@ -325,7 +345,7 @@ string encode_in_sb(vector<string> tokens, int pc)
     bitset<32> imm_final = (imm_12 << 19) | (imm_10to5 <<20) | (imm_4to1 << 7) | (imm_11 >> 4);
 
     machine_code = opcode | rs1 | rs2 | func3 | imm_final;
-    cout << machine_code << endl;
+    // cout << machine_code << endl;
     return dec_to_hex(bin_to_dec(machine_code)) ;
 }
 
@@ -374,6 +394,8 @@ MemoryPair datamemory; // pair of data memory with its size in bytes
 vector<MemoryPair> datamemoryList; // vector of data memory pairs with their addresses and values
 vector<seg> datalabels; // vector of data labels with its position in memory
 const int START =0;
+
+
 void read_data() {
     ifstream file("assemblycode.asm");
     string line;
@@ -384,6 +406,10 @@ void read_data() {
         while (getline(file, line)) {
             vector<string> tokens = splitString(line);
 
+            if (line.empty()) 
+            {
+                continue;
+            }
             if (start > 1) 
             {
                 continue;
@@ -470,14 +496,18 @@ void read_data() {
 
     for (int i = 0; i < stored.size(); i++) {
 
+        seg temp;
+        
         if (stored[i].type == "byte") 
         {
+            temp.name = stored[i].name;
+            temp.position = address;
             for (int j = 0; j < stored[i].value.size(); j++) 
             {
                 MemoryPair data;
                 data.first = address;
                 int val = stored[i].value[j];
-                string hex = dec_to_hex(val);
+                string hex = dec_to_hex_1(val);
                 data.second = hex;
                 datamemoryList.push_back(data);
                 pos++;
@@ -487,12 +517,14 @@ void read_data() {
         } 
         else if (stored[i].type == "word") 
         {
+            temp.name = stored[i].name;
+            temp.position = address;
             for (int j = 0; j < stored[i].value.size(); j++) 
             {
                 MemoryPair data;
                 data.first = address;
                 int val = stored[i].value[j];
-                string hex = dec_to_hex(val);
+                string hex = dec_to_hex_1(val);
                 data.second = hex;
                 datamemoryList.push_back(data);
                 pos += 4;
@@ -502,11 +534,15 @@ void read_data() {
         } 
         else if (stored[i].type == "half") 
         {
+            temp.name = stored[i].name;
+            temp.position = address;
             for (int j = 0; j < stored[i].value.size(); j++) 
             {
                 MemoryPair data;
                 data.first = address;
-                data.second.push_back(stored[i].value[j]);
+                int val = stored[i].value[j];
+                string hex = dec_to_hex_1(val);
+                data.second = hex;
                 datamemoryList.push_back(data);
                 pos += 2;
                 update += 2;
@@ -516,11 +552,15 @@ void read_data() {
         }
         else if (stored[i].type == "double")
         {
+            temp.name = stored[i].name;
+            temp.position = address;
             for (int j = 0; j < stored[i].value.size(); j++) 
             {
                 MemoryPair data;
                 data.first = address;
-                data.second.push_back(stored[i].value[j]);
+                int val = stored[i].value[j];
+                string hex = dec_to_hex_1(val);
+                data.second = hex;
                 datamemoryList.push_back(data);
                 pos += 8;
                 update += 8;
@@ -529,6 +569,8 @@ void read_data() {
         }
         else if (stored[i].type == "asciiz")
         {
+            temp.name = stored[i].name;
+            temp.position = address;
             for (int j = 0; j < stored[i].value1.size(); j++) 
             {
                 MemoryPair data;
@@ -541,6 +583,7 @@ void read_data() {
             }
         
         }
+        datalabels.push_back(temp);
     }
     cout << endl;
      
@@ -567,9 +610,12 @@ int main() {
     int pc = 0x0 ;
     loadLabels("assemblycode.asm");
     ofstream mc("machinecode.mc");
-    while (!file.eof()) {
-        string line;
-        getline(file, line);
+    string line;
+    while (getline(file, line)) {
+        if (line.empty())
+        {
+            continue;
+        }
         if (line.find(':') == string::npos) {   
             vector<string> tokens = splitString(line);
             string instruction = tokens[0];
@@ -594,7 +640,7 @@ int main() {
                     mc << dec_to_hex_1(pc) << " "  << encode_in_uj(tokens,pc) << endl;
                     break;
                 case 'L':
-                    mc << dec_to_hex_1(pc) << " "  << encode_in_lw(tokens) << endl;
+                    mc << dec_to_hex_1(pc) << " "  << encode_in_lw(tokens, pc) << endl;
                     break;
             }
             pc += 4 ;
