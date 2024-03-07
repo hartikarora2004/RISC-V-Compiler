@@ -136,10 +136,10 @@ std::map<string,vector<std::string>> encodes_map = {
     {"addi", {"0010011", "000", "", "I"}},        // addi
     {"andi", {"0010011", "111", "", "I"}},        // andi
     {"ori",  {"0010011", "110", "", "I"}},        // ori
-    {"lb",   {"0000011", "000", "", "I"}},        // lb
-    {"ld",   {"0000011", "011", "", "I"}},        // ld
-    {"lh",   {"0000011", "001", "", "I"}},        // lh
-    {"lw",   {"0000011", "010", "", "I"}},        // lw
+    {"lb",   {"0000011", "000", "", "L"}},        // lb
+    {"ld",   {"0000011", "011", "", "L"}},        // ld
+    {"lh",   {"0000011", "001", "", "L"}},        // lh
+    {"lw",   {"0000011", "010", "", "L"}},        // lw
     {"jalr", {"1100111", "000", "", "I"}},       // jalr
     {"sb",   {"0100011", "000", "", "S"}},       // sb
     {"sw",   {"0100011", "010", "", "S"}},       // sw
@@ -259,6 +259,22 @@ string encode_in_s(vector<string> tokens) {
     return dec_to_hex(bin_to_dec(machine_code)) ; // Added return statement
 }
 
+string encode_in_lw(vector<string> tokens) {
+    bitset<32> machine_code ;
+    bitset<32> opcode(encodes_map[tokens[0]][0]);
+    bitset<32> rd(reg(tokens[1]));
+    rd = rd << 7;
+    bitset<32> funct3(encodes_map[tokens[0]][1]);
+    funct3 = funct3 << 12;
+    int index = tokens[2].find('(');
+    string imm_str = tokens[2].substr(0, index);
+    bitset<32> imm(string_to_int(imm_str));
+    imm = imm << 20;
+    bitset<32> rs1(reg(tokens[2].substr(index + 1, tokens[2].size() - index - 2)));
+    rs1 = rs1 << 15;
+    machine_code = (opcode | rd | funct3 | rs1 | imm);
+    return dec_to_hex(bin_to_dec(machine_code)) ; // Added return statement
+}
 map<string, int> labels;
 int pc1 = 0x0;
 void processLabels(const string& line) {
@@ -565,7 +581,10 @@ int main() {
                     mc << dec_to_hex_1(pc) << " "  << encode_in_u(tokens) << endl;
                     break;
                 case 'J':
-                    mc << dec_to_hex(pc) << " "  << encode_in_uj(tokens,pc) << endl;
+                    mc << dec_to_hex_1(pc) << " "  << encode_in_uj(tokens,pc) << endl;
+                    break;
+                case 'L':
+                    mc << dec_to_hex_1(pc) << " "  << encode_in_lw(tokens) << endl;
                     break;
             }
             pc += 4 ;
