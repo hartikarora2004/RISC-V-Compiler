@@ -100,6 +100,10 @@ long long int bin_to_dec(bitset<32> bin) {
 }
 
 string dec_to_hex_1(long long int dec) {
+    if (dec < 0)
+    {
+        dec = 0xFFFFFFFF + dec + 1;
+    }
     string hex = "";
     while (dec != 0) {
         int temp = 0;
@@ -116,6 +120,10 @@ string dec_to_hex_1(long long int dec) {
     return hex;
 }
 string dec_to_hex(long long int dec) {
+    if (dec < 0)
+    {
+        dec = 0xFFFFFFFF + dec + 1;
+    }
     string hex = "";
     while (dec != 0) {
         int temp = dec % 16;
@@ -465,6 +473,7 @@ void read_data() {
                             for (int i = index + 2; i < tokens.size(); i++) 
                             {
                                 int a = string_to_int(tokens[i]);
+                
                                 temp.value.push_back(a);
                             }
                         }
@@ -530,6 +539,7 @@ void read_data() {
                 data.first = address;
                 int val = stored[i].value[j];
                 string hex = dec_to_hex_1(val);
+
                 data.second = hex;
                 datamemoryList.push_back(data);
                 pos += 4;
