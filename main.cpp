@@ -293,9 +293,6 @@ string encode_in_lw(vector<string> tokens, int pc )
     bitset<32> rs1(reg(tokens[2].substr(index + 1, tokens[2].size() - index - 2)));
     rs1 = rs1 << 15;
     machine_code = (opcode | rd | funct3 | rs1 | imm);
-    // cout << opcode << " " << rd << " " << funct3 << " " << rs1 << " " << imm << endl;
-    // cout << machine_code << endl;
-    
     return dec_to_hex(bin_to_dec(machine_code)) ; // Added return statement
 }
 
@@ -340,8 +337,6 @@ string encode_in_sb(vector<string> tokens, int pc)
     bitset<32> func3(encodes_map[tokens[0]][1]);
     func3 = func3 << 12;
     int imm  = labels[tokens[3]] - pc;
-    // cout << labels[tokens[3]] << endl ;
-    // cout << imm <<endl;
     bitset<32> imm_11(imm & 0x400);
     bitset<32> imm_12(imm & 0x800);
     bitset<32> imm_10to5(imm & 0x7E0);
@@ -350,7 +345,6 @@ string encode_in_sb(vector<string> tokens, int pc)
     bitset<32> imm_final = (imm_12 << 19) | (imm_10to5 <<20) | (imm_4to1 << 7) | (imm_11 >> 4);
 
     machine_code = opcode | rs1 | rs2 | func3 | imm_final;
-    // cout << machine_code << endl;
     return dec_to_hex(bin_to_dec(machine_code)) ;
 }
 
@@ -374,9 +368,6 @@ string encode_in_uj(vector<string> tokens, int pc)
     bitset<32> rd(reg(tokens[1]));
     rd = rd << 7;
     int imm = labels[tokens[2]] - pc ;
-    // cout << imm << endl;
-    // cout << labels[tokens[2]] << endl;
-    
     bitset<32> bit_20(imm >> 1 & 0x80000);
     bitset<32> bit_10to1(imm << 8 & 0x7FE00);
     bitset<32> bit_11(imm >> 2 & 0x100);
@@ -435,7 +426,6 @@ void read_data() {
 
                     for (int i = 0; i < tokens.size(); i++) 
                     {
-                        cout << tokens[i] << " ";
                         if (tokens[i].find(":") != string::npos && tokens[i+1].find(".") != string::npos)
                         {
                             flag = 1;
@@ -459,7 +449,7 @@ void read_data() {
                                 {
                                     temp.value1.push_back(a[j]);
                                 }
-                                // temp.value1.push_back(0);
+                              
                             }
                         } 
                         else 
@@ -471,17 +461,6 @@ void read_data() {
                             }
                         }
                     } 
-                    // else 
-                    // {
-                    //     temp.name = tokens[0];
-                    //     temp.type = tokens[1].substr(1);
-                        
-                    //     for (int i = 2; i < tokens.size(); i++) 
-                    //     {
-                    //         int a = string_to_int(tokens[i]);
-                    //         temp.value.push_back(a);
-                    //     }
-                    // }
                     stored.push_back(temp);
                 }
             } 
