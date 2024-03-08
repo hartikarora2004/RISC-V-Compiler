@@ -318,7 +318,13 @@ void loadLabels(const string& filename) {
     ifstream file(filename);
     string line;
     while (getline(file, line)) {
-        processLabels(line);
+        if (line.empty()) {
+            continue;
+        }
+        else
+        {
+            processLabels(line);
+        }
     }
     file.close();
 }
@@ -368,6 +374,8 @@ string encode_in_uj(vector<string> tokens, int pc)
     bitset<32> rd(reg(tokens[1]));
     rd = rd << 7;
     int imm = labels[tokens[2]] - pc ;
+    // cout << imm << endl;
+    // cout << labels[tokens[2]] << endl;
     
     bitset<32> bit_20(imm >> 1 & 0x80000);
     bitset<32> bit_10to1(imm << 8 & 0x7FE00);
@@ -601,7 +609,6 @@ void read_data() {
         }
     }
 }
-
 
 int main() {   
     // map <string,int> labels;
