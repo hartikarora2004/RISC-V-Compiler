@@ -286,21 +286,16 @@ string encode_in_lw(vector<string> tokens, int pc )
     rd = rd << 7;
     bitset<32> funct3(encodes_map[tokens[0]][1]);
     funct3 = funct3 << 12;
-    if (tokens[2].find('(') != string::npos) 
-    {
-        int index = tokens[2].find('(');
-        string imm_str = tokens[2].substr(0, index);
-        bitset<32> imm(string_to_int(imm_str));
-        bitset<32> rs1(reg(tokens[2].substr(index + 1, tokens[2].size() - index - 2)));
-        rs1 = rs1 << 15;
-        machine_code = (opcode | rd | funct3 | rs1 | imm);
-    } 
-    else 
-    {
-        bitset<32> imm(string_to_int(tokens[2]));
-        imm = imm << 20;
-        machine_code = (opcode | rd | funct3 | imm);
-    }
+    int index = tokens[2].find('(');
+    string imm_str = tokens[2].substr(0, index);
+    bitset<32> imm(string_to_int(imm_str));
+    imm = imm << 20;
+    bitset<32> rs1(reg(tokens[2].substr(index + 1, tokens[2].size() - index - 2)));
+    rs1 = rs1 << 15;
+    machine_code = (opcode | rd | funct3 | rs1 | imm);
+    // cout << opcode << " " << rd << " " << funct3 << " " << rs1 << " " << imm << endl;
+    // cout << machine_code << endl;
+    
     return dec_to_hex(bin_to_dec(machine_code)) ; // Added return statement
 }
 
