@@ -1,6 +1,9 @@
 //   कर्मण्ये वाधिका रस्ते मा फलेषु कदाचन।
 //   मा कर्म फल हेतु र्भूर्मा ते सङ्गोऽस्त्व कर्मणि॥
 
+// Sneha Sahu -> 2022CSB1129
+// Hartik Arora -> 2022CSB1314
+
 #include<iostream>
 #include <string>
 #include <vector>
