@@ -15,7 +15,7 @@
 #include <iomanip>
 #include <fstream>
 using namespace std;
-
+int registers[32] ;
 struct datafile
 {
     string name;
@@ -235,6 +235,28 @@ int reg(string register_name)
     
 }
 string encode_in_r(vector<string> tokens) {
+    if(tokens[0] == "add") registers[reg(tokens[1])] = registers[reg(tokens[2])] + registers[reg(tokens[3])];
+    else if (tokens[0] == "and") registers[reg(tokens[1])] = registers[reg(tokens[2])] + registers[reg(tokens[3])];
+    else if (tokens[0] == "or") registers[reg(tokens[1])] = registers[reg(tokens[2])] | registers[reg(tokens[3])];
+    else if( tokens[0] == "sll") registers[reg(tokens[1])] = registers[reg(tokens[2])] << registers[reg(tokens[3])];
+    else if( tokens[0] == "slt") 
+        {registers[reg(tokens[1])] = registers[reg(tokens[2])] + registers[reg(tokens[3])];
+        if(registers[reg(tokens[2])] < registers[reg(tokens[3])])
+        {
+            registers[reg(tokens[1])] = 1;
+        }
+        else
+        {
+            registers[reg(tokens[1])] = 0;
+        }
+        }
+    else if( tokens[0] == "sra") registers[reg(tokens[1])] = registers[reg(tokens[2])] >> registers[reg(tokens[3])];
+    else if( tokens[0] == "srl") registers[reg(tokens[1])] = registers[reg(tokens[2])] >> registers[reg(tokens[3])];
+    else if( tokens[0] == "sub") registers[reg(tokens[1])] = registers[reg(tokens[2])] - registers[reg(tokens[3])];
+    else if( tokens[0] == "xor") registers[reg(tokens[1])] = registers[reg(tokens[2])] ^ registers[reg(tokens[3])];
+    else if( tokens[0] == "mul") registers[reg(tokens[1])] = registers[reg(tokens[2])] * registers[reg(tokens[3])];
+    else if( tokens[0] == "div") registers[reg(tokens[1])] = registers[reg(tokens[2])] / registers[reg(tokens[3])];
+    else if( tokens[0] == "rem") registers[reg(tokens[1])] = registers[reg(tokens[2])] % registers[reg(tokens[3])];
     bitset<32> machine_code ;
     bitset<32> opcode(encodes_map[tokens[0]][0]);
     bitset<32> rd(reg(tokens[1]));
@@ -252,7 +274,10 @@ string encode_in_r(vector<string> tokens) {
 }
 
 string encode_in_i(vector<string> tokens) 
-{
+{   
+    if (tokens[0] == "addi") registers[reg(tokens[1])] = registers[reg(tokens[2])] + string_to_int(tokens[3]);
+    else if (tokens[0] == "andi") registers[reg(tokens[1])] = registers[reg(tokens[2])] & string_to_int(tokens[3]);
+    else registers[reg(tokens[1])] = registers[reg(tokens[2])] | string_to_int(tokens[3]);
     bitset<32> machine_code ;
     bitset<32> opcode(encodes_map[tokens[0]][0]);
     bitset<32> rd(reg(tokens[1]));
@@ -620,9 +645,14 @@ void read_data() {
         }
     }
 }
-
+void register_declaration() {
+    for (int i = 0; i < 32; i++) {
+        registers[i] = 0;
+    }
+}
 int main() {   
     // map <string,int> labels;
+    register_declaration ;
     ifstream file("assemblycode.asm");
     int pc = 0x0 ;
     loadLabels("assemblycode.asm");
