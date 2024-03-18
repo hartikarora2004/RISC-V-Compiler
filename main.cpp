@@ -15,7 +15,7 @@
 #include <iomanip>
 #include <fstream>
 using namespace std;
-int registers[32] ;
+vector<int> registers(32, 0);
 struct datafile
 {
     string name;
@@ -402,7 +402,6 @@ string encode_in_u(vector<string> tokens) {
 
 }
 
-    
 string encode_in_uj(vector<string> tokens, int pc) 
 {
     bitset<32> machine_code ;
@@ -645,14 +644,10 @@ void read_data() {
         }
     }
 }
-void register_declaration() {
-    for (int i = 0; i < 32; i++) {
-        registers[i] = 0;
-    }
-}
+map<int, string> instructions;
+
 int main() {   
     // map <string,int> labels;
-    register_declaration ;
     ifstream file("assemblycode.asm");
     int pc = 0x0 ;
     loadLabels("assemblycode.asm");
@@ -681,24 +676,31 @@ int main() {
             switch(format) {
                 case 'R':    
                     mc << dec_to_hex_1(pc) << " " <<  encode_in_r(tokens) << endl;
+                    instructions[pc] = line;
                     break;
                 case 'I':
                     mc << dec_to_hex_1(pc) << " "  << encode_in_i(tokens) << endl;
+                    instructions[pc] = line;
                     break;
                 case 'S':
                     mc << dec_to_hex_1(pc) << " " << encode_in_s(tokens) << endl;
+                    instructions[pc] = line;
                     break;
                 case 'B':
                     mc << dec_to_hex_1(pc) << " " << encode_in_sb(tokens,pc) << endl;
+                    instructions[pc] = line;
                     break;
                 case 'U':
                     mc << dec_to_hex_1(pc) << " "  << encode_in_u(tokens) << endl;
+                    instructions[pc] = line;
                     break;
                 case 'J':
                     mc << dec_to_hex_1(pc) << " "  << encode_in_uj(tokens,pc) << endl;
+                    instructions[pc] = line;
                     break;
                 case 'L':
                     mc << dec_to_hex_1(pc) << " "  << encode_in_lw(tokens, pc) << endl;
+                    instructions[pc] = line;
                     break;
 
             }
@@ -709,6 +711,8 @@ int main() {
 
     read_data();
     mc.close();
-    
+    for (auto it : instructions) {
+        cout << it.first << " " << it.second << endl;
+    }
     return 0;
 }
